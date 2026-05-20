@@ -11,6 +11,17 @@ const CATEGORIES = [
   { id: "makeup",   label: "💄 مكياج وعطور" },
 ];
 
+const MONTHS_AR = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
+
+const toMonthKey = date => `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}`;
+const currentMonthKey = toMonthKey(new Date());
+
+const getClientMonth = client => {
+  if (client.month) return client.month;
+  if (client.createdAt?.toDate) return toMonthKey(client.createdAt.toDate());
+  return currentMonthKey;
+};
+
 const STATUS_CYCLE = ["لم يتم الدفع", "تم الدفع", "تم التحويل"];
 const STATUS_STYLE = {
   "تم الدفع":    { cls: "paid",        icon: "✓",  label: "تم الدفع"    },
@@ -182,6 +193,7 @@ export default function App() {
   const [saving,        setSaving]        = useState(false);
   const [toast,         setToast]         = useState(null);
   const [activeCategory, setActiveCategory] = useState("private");
+  const [selectedMonth,  setSelectedMonth]  = useState(currentMonthKey);
   const [baseCost,      setBaseCost]      = useState("");
   const [editingBase,   setEditingBase]   = useState(false);
 
@@ -216,7 +228,7 @@ export default function App() {
     setSaving(true);
     try {
       if (modal.mode === "add") {
-        await addDoc(collection(db, "clients"), { ...data, createdAt: serverTimestamp() });
+        await addDoc(collection(db, "clients"), { ...data, month: selectedMonth, createdAt: serverTimestamp() });
         showToast(`✓  تمت إضافة ${data.name} بنجاح`);
       } else {
         await updateDoc(doc(db, "clients", modal.client.id), data);
@@ -244,11 +256,22 @@ export default function App() {
     await updateDoc(doc(db, "clients", client.id), { status: newStatus });
   };
 
+  // Month navigation
+  const [selYear, selMonth] = selectedMonth.split("-").map(Number);
+  const monthLabel = `${MONTHS_AR[selMonth-1]} ${selYear}`;
+  const shiftMonth = delta => {
+    const d = new Date(selYear, selMonth - 1 + delta);
+    setSelectedMonth(toMonthKey(d));
+  };
+
   // Helpers
   const itemTotal = item => (item.price || 0) * (item.qty || 1);
   const clientTotal = client => (client.items || []).reduce((s, i) => s + itemTotal(i), 0);
 
-  const catClients  = clients.filter(c => (c.category || "private") === activeCategory);
+  const catClients = clients.filter(c =>
+    (c.category || "private") === activeCategory &&
+    getClientMonth(c) === selectedMonth
+  );
   const grandTotal  = catClients.reduce((s, c) => s + clientTotal(c), 0);
   const collected   = catClients.filter(c => c.status === "تم الدفع")   .reduce((s, c) => s + clientTotal(c), 0);
   const transferred = catClients.filter(c => c.status === "تم التحويل").reduce((s, c) => s + clientTotal(c), 0);
@@ -279,6 +302,11 @@ export default function App() {
 
         /* Category Tabs */
         .cat-tabs{display:flex;background:#fff;border-bottom:2px solid #E8DDD3;overflow-x:auto}
+        /* Month Navigator */
+        .month-nav{display:flex;align-items:center;justify-content:center;gap:0;background:#F5EDE3;border-bottom:1px solid #E8DDD3;padding:10px 0}
+        .mnav-label{font-size:16px;font-weight:900;color:#5C2D0E;min-width:160px;text-align:center;letter-spacing:.5px}
+        .mnav-btn{width:36px;height:36px;border:none;background:transparent;color:#8B4E2A;font-size:22px;cursor:pointer;border-radius:8px;transition:background .2s;line-height:1;display:flex;align-items:center;justify-content:center}
+        .mnav-btn:hover{background:#EDD9C4}
         .cat-tab{flex:1;padding:14px 20px;border:none;background:transparent;font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;color:#B09080;cursor:pointer;transition:all .2s;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;min-width:120px}
         .cat-tab.active{color:#5C2D0E;border-bottom-color:#8B4E2A;background:#FDF8F4}
         .cat-tab:hover:not(.active){color:#8B4E2A;background:#FDF5EF}
@@ -363,6 +391,13 @@ export default function App() {
         ))}
       </div>
 
+      {/* ── Month Navigator ── */}
+      <div className="month-nav">
+        <button className="mnav-btn" onClick={() => shiftMonth(-1)}>&#8250;</button>
+        <div className="mnav-label">{monthLabel}</div>
+        <button className="mnav-btn" onClick={() => shiftMonth(1)}>&#8249;</button>
+      </div>
+
       {/* ── Stats Bar ── */}
       <div className="stats-row" style={{gridTemplateColumns:`repeat(${statsCount},1fr)`}}>
         <div className="stat-box">
@@ -445,55 +480,4 @@ export default function App() {
                   <button className="ebtn" onClick={() => setModal({ mode:"edit", client })} title="تعديل">✏️</button>
                   <span className={`chev ${isOpen?"open":""}`}>▶</span>
                 </div>
-              </div>
-
-              {isOpen && (
-                <div className="ibody">
-                  {(client.items||[]).map((item, j) => {
-                    const qty = item.qty || 1;
-                    const line = item.price * qty;
-                    return (
-                      <div className="irow-d" key={j}>
-                        <div style={{display:"flex",alignItems:"center"}}>
-                          <span className="idot"/>
-                          {qty > 1 && <span className="qty-badge">×{qty}</span>}
-                          {item.product}
-                        </div>
-                        <div style={{fontWeight:700,color:"#8B4E2A",whiteSpace:"nowrap"}}>
-                          {qty > 1
-                            ? `${qty} × ${item.price.toLocaleString()} = ${line.toLocaleString()}`
-                            : item.price.toLocaleString()
-                          } ج
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
-
-        {!loading && catClients.length > 0 && (
-          <div className="sum-card">
-            <div style={{fontSize:14,fontWeight:700,color:"#F0D9C8"}}>💰  الإجمالي الكلي — {catLabel}</div>
-            <div style={{fontSize:26,fontWeight:900,color:"#fff"}}>{grandTotal.toLocaleString()} ج</div>
-          </div>
-        )}
-      </div>
-
-      {modal && (
-        <Modal
-          mode={modal.mode}
-          client={modal.client}
-          category={activeCategory}
-          onClose={() => setModal(null)}
-          onSave={handleSave}
-          onDelete={handleDelete}
-          saving={saving}
-        />
-      )}
-      {toast && <div className={`toast ${toast.type}`}>{toast.msg}</div>}
-    </div>
-  );
-}
+              
