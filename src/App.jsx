@@ -90,7 +90,7 @@ function Modal({ mode, client, defaultCat, onClose, onSave, onDelete, saving }) 
       <div className={`mbox ${shake?"shake":""}`}>
         <div className="mhdr">
           <div className="mtitle">{isEdit?`✏️  تعديل — ${client.name}`:"➕  إضافة عميلة جديدة"}</div>
-          <div className="msub">{isEdit?"عدّل البيانات ثم اضغط حفظ":"اختار القسم وأدخل بيانات العميلة"}</div>
+          <div className="msub">{isEdit?"عدّل البيانات ثم اضغط حفظ":"اختار القسم وأدخل بيانات العميل"}</div>
         </div>
         <div className="mbody">
           {/* Category picker */}
@@ -103,8 +103,8 @@ function Modal({ mode, client, defaultCat, onClose, onSave, onDelete, saving }) 
             </div>
           </div>
           <div style={{marginBottom:18}}>
-            <div className="flbl">العميلة</div>
-            <input className="finp" placeholder="اسم العميلة..." value={name} onChange={e=>setName(e.target.value)}/>
+            <div className="flbl">العميل</div>
+            <input className="finp" placeholder="اسم العميل..." value={name} onChange={e=>setName(e.target.value)}/>
           </div>
           <div style={{marginBottom:18}}>
             <div className="flbl">حالة الدفع</div>
@@ -153,7 +153,7 @@ function Modal({ mode, client, defaultCat, onClose, onSave, onDelete, saving }) 
           {isEdit&&<button className="bdel" onClick={()=>onDelete(client.id)}>🗑</button>}
           <button className="bcancel" onClick={onClose}>إلغاء</button>
           <button className="bsave" onClick={handleSave} disabled={saving}>
-            {saving?"جاري الحفظ...":isEdit?"💾  حفظ التعديلات":"✓  إضافة العميلة"}
+            {saving?"جاري الحفظ...":isEdit?"💾  حفظ التعديلات":"✓  إضافة العميل"}
           </button>
         </div>
       </div>
