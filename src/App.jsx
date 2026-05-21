@@ -89,7 +89,7 @@ function Modal({ mode, client, defaultCat, onClose, onSave, onDelete, saving }) 
       `}</style>
       <div className={`mbox ${shake?"shake":""}`}>
         <div className="mhdr">
-          <div className="mtitle">{isEdit?`✏️  تعديل — ${client.name}`:"➕  إضافة عميلة جديدة"}</div>
+          <div className="mtitle">{isEdit?`✏️  تعديل — ${client.name}`:"➕  إضافة عميل جديد"}</div>
           <div className="msub">{isEdit?"عدّل البيانات ثم اضغط حفظ":"اختار القسم وأدخل بيانات العميل"}</div>
         </div>
         <div className="mbody">
@@ -370,7 +370,7 @@ export default function App() {
         <div className="ptitle">💄 سجل المبيعات</div>
         <div className="live-dot"><span className="dot"/>مباشر — يتحدث تلقائيًا</div>
         <div><button className="btn-add" onClick={()=>setModal({mode:"add"})}>
-          <span style={{fontSize:18,lineHeight:1}}>+</span> إضافة عميلة جديدة
+          <span style={{fontSize:18,lineHeight:1}}>+</span> إضافة عميل جديد
         </button></div>
       </div>
 
@@ -489,7 +489,7 @@ export default function App() {
           {loading&&<div style={{textAlign:"center",padding:"60px"}}><div className="spinner"/></div>}
           {!loading&&catClients.length===0&&(
             <div style={{textAlign:"center",padding:"60px",color:"#C9956E",fontSize:15}}>
-              لا يوجد عملاء في هذا الشهر — اضغط "إضافة عميلة جديدة" 💄
+              لا يوجد عملاء في هذا الشهر — اضغط "إضافة عميل جديد" 💄
             </div>
           )}
           {pageClients.map(client=>{
